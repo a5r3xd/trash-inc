@@ -4,10 +4,14 @@
   <title>Trash Remover</title>
  </head>
  <body>
+  <h1>Trash Removal Incremental</h1>
+  <h3>made by a5r3xd(aka wfgsgsdgs)</h3>
   <p>Oh noes! You found a small lake, full of trash! You want to get rid of the trash though.</p>
   <p>Trash remaining: <span id="ctrash"></span><span class="unit"></span>/<span id="ttrash"></span><span class="unit"></span></p>
   <p>Trash Points: <span id="rtrash"></span></p>
   <button onclick="remove_trash()">Pick up <span id="trashpc"></span><span class="unit"></span> of trash</button>
+  <p>Be magically able to grab another gram of trash at once. Cost: <span id ="up1cost"> trash points</span></p>
+  <button onclick="upgrade_1()">Buy Uprade</button>
 
   <script>
    // essential variables
@@ -15,11 +19,13 @@
    let current_trash = 5000;
    let trash_points = 0;
    let trash_per_click = 1;
+   let upg1_cost = 15
 
    const ctrash = document.getElementById("ctrash");
    const ttrash = document.getElementById("ttrash");
    const rtrash = document.getElementById("rtrash");
    const trashpc = document.getElementById("trashpc");
+   const up1_cost = document.getElementById("up1cost");
    ctrash.style.color = "red";
    ttrash.style.color = "red";
 
@@ -48,6 +54,7 @@
      ttrash.textContent = formatMass(total_trash);
      trashpc.textContent = formatMass(trash_per_click);
      rtrash.textContent = trash_points; // no units for points
+     upg1cost.textContent = upg1_cost;
 
      // update all unit spans for mass values only
      units.forEach((u, index) => {
@@ -64,10 +71,22 @@
        updateUI();
      }
    }
+   
+   function upgrade_1() {
+     if (trash_points >= upg1_cost) {
+       trash_points -= upg1_cost;
+       trash_per_click += 1;
+       upg1_cost *= 1.5;
+       upg1_cost = Math.ceil(upg1_cost);
+       updateUI();
+     }
+   }
+
 
    updateUI();
   </script>
 </body>
 </html>
+
 
 
