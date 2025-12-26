@@ -6,7 +6,7 @@
  <body>
   <h1>Trash Removal Incremental</h1>
   <h3>made by a5r3xd(aka wfgsgsdgs)</h3>
-  <p>Oh noes! You found a small lake, full of trash! You want to get rid of the trash though.</p>
+  <p>Oh noes! You found a medium lake, full of trash! You want to get rid of the trash though.</p>
   <p>Trash remaining: <span id="ctrash"></span><span class="unit"></span>/<span id="ttrash"></span><span class="unit"></span></p>
   <p>Trash Points: <span id="rtrash"></span></p>
   <button onclick="remove_trash()">Pick up <span id="trashpc"></span><span class="unit"></span> of trash</button>
@@ -16,10 +16,10 @@
 
   <script>
    // essential variables
-   let total_trash = 5000;
-   let current_trash = 5000;
+   let total_trash = 50000;
+   let current_trash = 50000;
    let trash_points = 0;
-   let trash_per_click = 1;
+   let trash_per_click = 2;
    let upg1_cost = 15
 
    const ctrash = document.getElementById("ctrash");
@@ -76,7 +76,7 @@
    function upgrade_1() {
      if (trash_points >= upg1_cost) {
        trash_points -= upg1_cost;
-       trash_per_click += 1;
+       trash_per_click += 2;
        upg1_cost *= 1.5;
        upg1_cost = Math.ceil(upg1_cost);
        updateUI();
@@ -88,6 +88,7 @@
   </script>
 </body>
 </html>
+
 
 
 
