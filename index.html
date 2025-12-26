@@ -16,10 +16,10 @@
 
   <script>
    // essential variables
-   let total_trash = 50000;
-   let current_trash = 50000;
+   let total_trash = 5000;
+   let current_trash = 5000;
    let trash_points = 0;
-   let trash_per_click = 2;
+   let trash_per_click = 1;
    let upg1_cost = 15
 
    const ctrash = document.getElementById("ctrash");
@@ -76,7 +76,7 @@
    function upgrade_1() {
      if (trash_points >= upg1_cost) {
        trash_points -= upg1_cost;
-       trash_per_click += 2;
+       trash_per_click += 1;
        upg1_cost *= 1.5;
        upg1_cost = Math.ceil(upg1_cost);
        updateUI();
@@ -88,6 +88,7 @@
   </script>
 </body>
 </html>
+
 
 
 
