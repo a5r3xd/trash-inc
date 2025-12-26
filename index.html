@@ -1,99 +1,250 @@
 <!DOCTYPE html>
 <html>
- <head>
+<head>
   <title>Trash Remover</title>
- </head>
- <body>
-  <h1>Trash Removal Incremental</h1>
-  <h3>made by a5r3xd(aka wfgsgsdgs)</h3>
-  <p>Oh noes! You found a medium lake, full of trash! You want to get rid of the trash though.</p>
-  <p>Trash remaining: <span id="ctrash"></span><span class="unit"></span>/<span id="ttrash"></span><span class="unit"></span></p>
-  <p>Trash Points: <span id="rtrash"></span></p>
-  <button onclick="remove_trash()">Pick up <span id="trashpc"></span><span class="unit"></span> of trash</button>
-  <p>Be magically able to grab another gram of trash at once.</p>
-  <p>Cost: <span id ="up1cost"></span> trash points</p>
-  <button onclick="upgrade_1()">Buy Upgrade</button>
+</head>
+<body>
+<h1>Trash Removal Incremental</h1>
+<h3>made by a5r3xd (aka wfgsgsdgs)</h3>
 
-  <script>
-   // essential variables
-   let total_trash = 5000;
-   let current_trash = 5000;
-   let trash_points = 0;
-   let trash_per_click = 1;
-   let upg1_cost = 15
+<p id="lakeName"></p>
+<p>Trash remaining: <span id="ctrash"></span><span class="unit"></span> / <span id="ttrash"></span><span class="unit"></span></p>
 
-   const ctrash = document.getElementById("ctrash");
-   const ttrash = document.getElementById("ttrash");
-   const rtrash = document.getElementById("rtrash");
-   const trashpc = document.getElementById("trashpc");
-   const up1_cost = document.getElementById("up1cost");
-   ctrash.style.color = "red";
-   ttrash.style.color = "red";
+<!-- Lake-switch buttons below trash remaining -->
+<button id="nextLakeBtn" style="display:none;" onclick="nextLake()">Go to next water body</button>
+<button id="prevLakeBtn" style="display:none;" onclick="prevLake()">Go back to previous water body</button>
 
-   // all unit spans
-   const units = document.querySelectorAll(".unit");
+<!-- Label for clean points gained -->
+<p id="cleanGainLabel" style="color:blue;">Clean Points gained on emptying: 0</p>
 
-   trashpc.style.color = "green";
-   units.forEach(u => u.style.color = "green");
+<p>Trash Points: <span id="rtrash"></span></p>
+<button onclick="remove_trash()">Pick up <span id="trashpc"></span><span class="unit"></span> of trash</button>
 
-   // function to format a number with proper mass unit
-   function formatMass(value) {
-     if (value >= 1000) {
-       return (value / 1000).toFixed(2);
-     } else {
-       return value.toFixed(2);
-     }
-   }
+<p>Be magically able to grab another gram of trash at once.</p>
+<p>Cost: <span id="up1cost"></span> trash points</p>
+<button onclick="upgrade_1()">Buy Upgrade 1</button>
 
-   function getUnit(value) {
-     return value >= 1000 ? " kg" : " g";
-   }
+<p id="upgrade2Text" style="display:none;">Double trash removed per click.</p>
+<p id="upgrade2CostText" style="display:none;">Cost: <span id="up2cost"></span> clean points</p>
+<button id="upgrade2Btn" style="display:none;" onclick="upgrade_2()">Buy Upgrade 2</button>
 
-   // update the UI
-   function updateUI() {
-     ctrash.textContent = formatMass(current_trash);
-     ttrash.textContent = formatMass(total_trash);
-     trashpc.textContent = formatMass(trash_per_click);
-     rtrash.textContent = trash_points; // no units for points
-     up1_cost.textContent = upg1_cost;
+<p>Clean Points: <span id="cleanPoints">0</span></p>
 
-     // update all unit spans for mass values only
-     units.forEach((u, index) => {
-       if (index === 0) u.textContent = getUnit(current_trash);  // current trash
-       if (index === 1) u.textContent = getUnit(total_trash);    // total trash
-       if (index === 2) u.textContent = getUnit(trash_per_click);// per click
-     });
-   }
+<script>
+  // --- Variables ---
+  let lakeIndex = 0;
+  const lakes = [
+    {name:"small lake", trash:500, cp:1},
+    {name:"medium lake", trash:50000, cp:5},
+    {name:"large lake", trash:100000, cp:15},
+    {name:"mega lake", trash:1000000, cp:50},
+  ];
 
-   function remove_trash() {
-     if (current_trash > 0) {
-       current_trash -= trash_per_click;
-       trash_points += trash_per_click;
-       updateUI();
-     }
-   }
-   
-   function upgrade_1() {
-     if (trash_points >= upg1_cost) {
-       trash_points -= upg1_cost;
-       trash_per_click += 1;
-       upg1_cost *= 1.5;
-       upg1_cost = Math.ceil(upg1_cost);
-       updateUI();
-     }
-   }
+  let total_trash = lakes[lakeIndex].trash;
+  let current_trash = total_trash;
+  let trash_points = 0;
 
+  // Upgrade 1 (resets per lake)
+  let upg1_level = 0;
+  let upg1_cost = 15;
 
-   updateUI();
-  </script>
+  // Upgrade 2 (permanent)
+  let upg2_multiplier = 1;
+  let upg2_cost = 1;
+
+  // Trash per click
+  let trash_per_click = 1;
+
+  // Clean points (global)
+  let clean_points = 0;
+
+  // Track lake cleaned state
+  let lakeCleaned = false;
+  let smallLakeCleaned = false;
+
+  // --- Elements ---
+  const ctrash = document.getElementById("ctrash");
+  const ttrash = document.getElementById("ttrash");
+  const rtrash = document.getElementById("rtrash");
+  const trashpc = document.getElementById("trashpc");
+  const up1_cost_el = document.getElementById("up1cost");
+
+  const up2_cost_el = document.getElementById("up2cost");
+  const upgrade2Text = document.getElementById("upgrade2Text");
+  const upgrade2Btn = document.getElementById("upgrade2Btn");
+  const nextLakeBtn = document.getElementById("nextLakeBtn");
+  const prevLakeBtn = document.getElementById("prevLakeBtn");
+
+  const lakeNameText = document.getElementById("lakeName");
+  const cleanPointsText = document.getElementById("cleanPoints");
+  const cleanGainLabel = document.getElementById("cleanGainLabel");
+
+  const units = document.querySelectorAll(".unit");
+
+  trashpc.style.color = "green";
+  units.forEach(u => u.style.color = "green");
+  ctrash.style.color = "red";
+  ttrash.style.color = "red";
+
+  // --- Helper functions ---
+  function formatMass(value){
+    if(value >= 1000000){      // ≥ 1 t
+      return (value/1000000).toFixed(2);
+    } else if(value >= 1000){  // ≥ 1 kg
+      return (value/1000).toFixed(2);
+    } else {
+      return value.toFixed(2);
+    }
+  }
+
+  function getUnit(value){
+    if(value >= 1000000) return " t";
+    if(value >= 1000) return " kg";
+    return " g";
+  }
+
+  function updateTrashPerClick(){
+    trash_per_click = (1 + upg1_level) * upg2_multiplier;
+  }
+
+  function updateUI(){
+    ctrash.textContent = formatMass(current_trash);
+    ttrash.textContent = formatMass(total_trash);
+    trashpc.textContent = formatMass(trash_per_click);
+    rtrash.textContent = trash_points;
+    up1_cost_el.textContent = upg1_cost;
+    up2_cost_el.textContent = upg2_cost;
+    cleanPointsText.textContent = clean_points;
+
+    // Update unit spans
+    units.forEach((u,index)=>{
+      if(index===0) u.textContent=getUnit(current_trash);
+      if(index===1) u.textContent=getUnit(total_trash);
+      if(index===2) u.textContent=getUnit(trash_per_click);
+    });
+
+    // Update clean points label dynamically every click
+    cleanGainLabel.textContent = `Clean Points gained on emptying: ${lakeCleaned ? 0 : lakes[lakeIndex].cp}`;
+  }
+
+  // --- Actions ---
+  function remove_trash(){
+    if(current_trash>0){
+      let removed = Math.min(trash_per_click,current_trash);
+      current_trash -= removed;
+      trash_points += removed;
+      updateUI();
+      if(current_trash===0) cleanLake();
+    }
+  }
+
+  function upgrade_1(){
+    if(trash_points >= upg1_cost){
+      trash_points -= upg1_cost;
+      upg1_level += 1;
+      upg1_cost = Math.ceil(upg1_cost * 1.5);
+      updateTrashPerClick();
+      updateUI();
+    }
+  }
+
+  function upgrade_2(){
+    if(clean_points >= upg2_cost){
+      clean_points -= upg2_cost;
+      upg2_multiplier *= 2;
+      upg2_cost *= 2;
+      updateTrashPerClick();
+      updateUI();
+    }
+  }
+
+  function cleanLake(){
+    lakeCleaned = true;
+    clean_points += lakes[lakeIndex].cp;
+
+    if(lakeIndex === 0) smallLakeCleaned = true;
+
+    // Reset per-lake stuff
+    trash_points = 0;
+    upg1_level = 0;
+    upg1_cost = 15;
+    current_trash = total_trash;
+
+    // Upgrade 2 visibility
+    if(smallLakeCleaned){
+      upgrade2Text.style.display = "block";
+      upgrade2Btn.style.display = "inline";
+      document.getElementById("upgrade2CostText").style.display="block";
+    }
+
+    // Next/Prev buttons
+    if(lakeIndex < lakes.length - 1) nextLakeBtn.style.display="inline";
+    if(lakeIndex > 0) prevLakeBtn.style.display="inline";
+
+    updateTrashPerClick();
+    updateUI(); // label updates dynamically
+  }
+
+  function nextLake(){
+    if(!lakeCleaned) return;
+
+    lakeIndex++;
+    total_trash = lakes[lakeIndex].trash;
+    current_trash = total_trash;
+    trash_points = 0;
+    upg1_level = 0;
+    upg1_cost = 15;
+    lakeCleaned = false;
+
+    lakeNameText.textContent=`You found a ${lakes[lakeIndex].name}, full of trash!`;
+
+    nextLakeBtn.style.display="none";
+    prevLakeBtn.style.display = lakeIndex > 0 ? "inline" : "none";
+
+    if(smallLakeCleaned){
+      upgrade2Text.style.display = "block";
+      upgrade2Btn.style.display = "inline";
+      document.getElementById("upgrade2CostText").style.display="block";
+    }
+
+    updateTrashPerClick();
+    updateUI();
+  }
+
+  function prevLake(){
+    if(lakeIndex === 0) return;
+
+    lakeIndex--;
+    total_trash = lakes[lakeIndex].trash;
+    current_trash = total_trash;
+    trash_points = 0;
+    upg1_level = 0;
+    upg1_cost = 15;
+    lakeCleaned = smallLakeCleaned;
+
+    lakeNameText.textContent = `You returned to the ${lakes[lakeIndex].name}, full of trash!`;
+
+    prevLakeBtn.style.display = lakeIndex > 0 ? "inline" : "none";
+    if(lakeCleaned || smallLakeCleaned) nextLakeBtn.style.display = "inline";
+
+    if(smallLakeCleaned){
+      upgrade2Text.style.display = "block";
+      upgrade2Btn.style.display = "inline";
+      document.getElementById("upgrade2CostText").style.display="block";
+    } else {
+      upgrade2Text.style.display = "none";
+      upgrade2Btn.style.display = "none";
+      document.getElementById("upgrade2CostText").style.display="none";
+    }
+
+    updateTrashPerClick();
+    updateUI();
+  }
+
+  // --- Initialize ---
+  lakeNameText.textContent=`You found a ${lakes[lakeIndex].name}, full of trash!`;
+  updateTrashPerClick();
+  updateUI();
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
