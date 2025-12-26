@@ -10,11 +10,9 @@
 <p id="lakeName"></p>
 <p>Trash remaining: <span id="ctrash"></span><span class="unit"></span> / <span id="ttrash"></span><span class="unit"></span></p>
 
-<!-- Lake-switch buttons below trash remaining -->
-<button id="nextLakeBtn" style="display:none;" onclick="nextLake()">Go to next water body</button>
 <button id="prevLakeBtn" style="display:none;" onclick="prevLake()">Go back to previous water body</button>
+<button id="nextLakeBtn" style="display:none;" onclick="nextLake()">Go to next water body</button>
 
-<!-- Label for clean points gained -->
 <p id="cleanGainLabel" style="color:blue;">Clean Points gained on emptying: 0</p>
 
 <p>Trash Points: <span id="rtrash"></span></p>
@@ -57,8 +55,10 @@
   // Clean points (global)
   let clean_points = 0;
 
-  // Track lake cleaned state
-  let lakeCleaned = false;
+  // Track lake cleaned state per lake
+  let lakeCleaned = Array(lakes.length).fill(false);
+
+  // Track if small lake is cleaned for unlocks
   let smallLakeCleaned = false;
 
   // --- Elements ---
@@ -87,13 +87,9 @@
 
   // --- Helper functions ---
   function formatMass(value){
-    if(value >= 1000000){      // ≥ 1 t
-      return (value/1000000).toFixed(2);
-    } else if(value >= 1000){  // ≥ 1 kg
-      return (value/1000).toFixed(2);
-    } else {
-      return value.toFixed(2);
-    }
+    if(value >= 1000000) return (value/1000000).toFixed(2);
+    if(value >= 1000) return (value/1000).toFixed(2);
+    return value.toFixed(2);
   }
 
   function getUnit(value){
@@ -122,8 +118,19 @@
       if(index===2) u.textContent=getUnit(trash_per_click);
     });
 
-    // Update clean points label dynamically every click
+    // Always show CP for this lake
     cleanGainLabel.textContent = `Clean Points gained on emptying: ${lakes[lakeIndex].cp}`;
+
+    // Update buttons
+    nextLakeBtn.style.display = (lakeIndex < lakes.length - 1 && lakeCleaned[lakeIndex]) ? "inline" : "none";
+    prevLakeBtn.style.display = (lakeIndex > 0) ? "inline" : "none";
+
+    // Upgrade 2 visibility
+    if(smallLakeCleaned){
+      upgrade2Text.style.display = "block";
+      upgrade2Btn.style.display = "inline";
+      document.getElementById("upgrade2CostText").style.display="block";
+    }
   }
 
   // --- Actions ---
@@ -158,7 +165,7 @@
   }
 
   function cleanLake(){
-    lakeCleaned = true;
+    lakeCleaned[lakeIndex] = true;
     clean_points += lakes[lakeIndex].cp;
 
     if(lakeIndex === 0) smallLakeCleaned = true;
@@ -169,23 +176,12 @@
     upg1_cost = 15;
     current_trash = total_trash;
 
-    // Upgrade 2 visibility
-    if(smallLakeCleaned){
-      upgrade2Text.style.display = "block";
-      upgrade2Btn.style.display = "inline";
-      document.getElementById("upgrade2CostText").style.display="block";
-    }
-
-    // Next/Prev buttons
-    if(lakeIndex < lakes.length - 1) nextLakeBtn.style.display="inline";
-    if(lakeIndex > 0) prevLakeBtn.style.display="inline";
-
     updateTrashPerClick();
-    updateUI(); // label updates dynamically
+    updateUI();
   }
 
   function nextLake(){
-    if(!lakeCleaned) return;
+    if(!lakeCleaned[lakeIndex]) return;
 
     lakeIndex++;
     total_trash = lakes[lakeIndex].trash;
@@ -193,18 +189,8 @@
     trash_points = 0;
     upg1_level = 0;
     upg1_cost = 15;
-    lakeCleaned = false;
 
     lakeNameText.textContent=`You found a ${lakes[lakeIndex].name}, full of trash!`;
-
-    nextLakeBtn.style.display="none";
-    prevLakeBtn.style.display = lakeIndex > 0 ? "inline" : "none";
-
-    if(smallLakeCleaned){
-      upgrade2Text.style.display = "block";
-      upgrade2Btn.style.display = "inline";
-      document.getElementById("upgrade2CostText").style.display="block";
-    }
 
     updateTrashPerClick();
     updateUI();
@@ -219,22 +205,8 @@
     trash_points = 0;
     upg1_level = 0;
     upg1_cost = 15;
-    lakeCleaned = smallLakeCleaned;
 
     lakeNameText.textContent = `You returned to the ${lakes[lakeIndex].name}, full of trash!`;
-
-    prevLakeBtn.style.display = lakeIndex > 0 ? "inline" : "none";
-    if(lakeCleaned || smallLakeCleaned) nextLakeBtn.style.display = "inline";
-
-    if(smallLakeCleaned){
-      upgrade2Text.style.display = "block";
-      upgrade2Btn.style.display = "inline";
-      document.getElementById("upgrade2CostText").style.display="block";
-    } else {
-      upgrade2Text.style.display = "none";
-      upgrade2Btn.style.display = "none";
-      document.getElementById("upgrade2CostText").style.display="none";
-    }
 
     updateTrashPerClick();
     updateUI();
@@ -247,6 +219,3 @@
 </script>
 </body>
 </html>
-
-
-
