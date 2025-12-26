@@ -27,6 +27,15 @@
 <p id="upgrade2CostText" style="display:none;">Cost: <span id="up2cost"></span> clean points</p>
 <button id="upgrade2Btn" style="display:none;" onclick="upgrade_2()">Buy Upgrade 2</button>
 
+<p>Progress to clean water body</p>
+<!-- Progress bar -->
+<div id="progressContainer" style="width: 100%; height: 30px; background-color: #ddd; border-radius: 5px; margin-top: 20px; position: relative;">
+  <div id="progressBar" style="height: 100%; width: 0%; background-color: green; border-radius: 5px;"></div>
+  <span id="progressText" style="position: absolute; width: 100%; text-align: center; line-height: 30px; font-weight: bold; color: white;">
+    Progress to emptying water body: 0%
+  </span>
+</div>
+
 <script>
   // --- Variables ---
   let lakeIndex = 0;
@@ -47,7 +56,7 @@
   let upg1_cost = 15;
 
   // Upgrade 2 (permanent)
-  let upg2_multiplier = 1;
+  let upg2_multiplier = 10;
   let upg2_cost = 1;
 
   // Trash per click
@@ -79,12 +88,34 @@
   const cleanPointsText = document.getElementById("cleanPoints");
   const cleanGainLabel = document.getElementById("cleanGainLabel");
 
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+
   const units = document.querySelectorAll(".unit");
 
   trashpc.style.color = "green";
   units.forEach(u => u.style.color = "green");
   ctrash.style.color = "red";
   ttrash.style.color = "red";
+
+  // --- Progress animation variables ---
+  let currentProgressWidth = 0; // current width in %
+  let targetProgressWidth = 0;  // target width in %
+
+  function animateProgress() {
+    // Smoothly move current width toward target width
+    const delta = targetProgressWidth - currentProgressWidth;
+    if(Math.abs(delta) > 0.01){
+      currentProgressWidth += delta * 0.2; // adjust speed with 0.2
+      progressBar.style.width = currentProgressWidth + "%";
+      progressText.textContent = `Progress to emptying water body: ${currentProgressWidth.toFixed(1)}%`;
+      requestAnimationFrame(animateProgress);
+    } else {
+      currentProgressWidth = targetProgressWidth;
+      progressBar.style.width = currentProgressWidth + "%";
+      progressText.textContent = `Progress to emptying water body: ${currentProgressWidth.toFixed(1)}%`;
+    }
+  }
 
   // --- Helper functions ---
   function formatMass(value){
@@ -132,6 +163,10 @@
       upgrade2Btn.style.display = "inline";
       document.getElementById("upgrade2CostText").style.display="block";
     }
+
+    // Update target progress width
+    targetProgressWidth = ((total_trash - current_trash) / total_trash * 100);
+    animateProgress();
   }
 
   // --- Actions ---
@@ -220,4 +255,3 @@
 </script>
 </body>
 </html>
-
