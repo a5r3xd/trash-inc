@@ -34,10 +34,10 @@
   // --- Variables ---
   let lakeIndex = 0;
   const lakes = [
-    {name:"small lake", trash:500, cp:1},
-    {name:"medium lake", trash:50000, cp:5},
-    {name:"large lake", trash:100000, cp:15},
-    {name:"mega lake", trash:1000000, cp:50},
+    {name:"small lake", trash:5000, cp:1},
+    {name:"medium lake", trash:500000, cp:5},
+    {name:"large lake", trash:1000000, cp:15},
+    {name:"mega lake", trash:10000000, cp:50},
   ];
 
   let total_trash = lakes[lakeIndex].trash;
@@ -124,7 +124,7 @@
     });
 
     // Update clean points label dynamically every click
-    cleanGainLabel.textContent = `Clean Points gained on emptying: ${lakeCleaned ? 0 : lakes[lakeIndex].cp}`;
+    cleanGainLabel.textContent = `Clean Points gained on emptying: ${lakes[lakeIndex].cp}`;
   }
 
   // --- Actions ---
@@ -248,3 +248,4 @@
 </script>
 </body>
 </html>
+
