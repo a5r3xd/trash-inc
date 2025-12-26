@@ -7,19 +7,21 @@
   <p> Oh noes! You found a small lake, full of trash! You want to get rid of the trash though.</p>
   <p>Trash remaining: <span id="ctrash"></span>g/<span id="ttrash"></span>g</p>
   <p>Trash Points: <span id="rtrash"></span></p>
-  <button onclick="remove_trash()">Pick up <span id="trashpc"></span>g of trash</button>
+  <button onclick="remove_trash()">Pick up <span id="trashpc"></span><span id="unit:"></span> of trash</button>
   <script>
    // essential variables v v v
    let total_trash = 5000
    let current_trash = 5000
    let trash_points = 0
    let trash_per_click = 1
-
+   let unit = "g"
  
    const ctrash = document.getElementById("ctrash");
    const ttrash = document.getElementById("ttrash");
    const rtrash = document.getElementById("rtrash");
    const trashpc = document.getElementById("trashpc");
+   trashpc.style.color = "green";
+   const unit = document.getElementById("unit");
    trashpc.style.color = "green";
    
    //update the ui
@@ -28,6 +30,7 @@
     ttrash.textContent = total_trash;
     rtrash.textContent = trash_points;
     trashpc.textContent = trash_per_click;
+    unit.textContent = "g";
    }
     
    function remove_trash() {
@@ -48,4 +51,5 @@
 
 
   
+
 
