@@ -3,7 +3,7 @@
 <head>
   <title>Trash Remover</title>
 </head>
-<body style="background-color: #222; color: white;">
+<body style="background-color:#222; color:white; font-family:sans-serif;">
 <h1>Trash Removal Incremental</h1>
 <h3>made by a5r3xd (aka wfgsgsdgs)</h3>
 
@@ -27,14 +27,24 @@
 <p id="upgrade2CostText" style="display:none;">Cost: <span id="up2cost"></span> clean points</p>
 <button id="upgrade2Btn" style="display:none;" onclick="upgrade_2()">Buy Upgrade 2</button>
 
+<!-- Hard reset button -->
+<button id="hardResetBtn" style="background-color:red; color:white;" onclick="hardReset()">
+  Hard Reset
+</button>
+
 <p>Progress to clean water body</p>
 <!-- Progress bar -->
-<div id="progressContainer" style="width: 100%; height: 30px; background-color: #ddd; border-radius: 5px; margin-top: 20px; position: relative;">
+<div id="progressContainer" style="width: 100%; height: 30px; background-color: #555; border-radius: 5px; margin-top: 20px; position: relative;">
   <div id="progressBar" style="height: 100%; width: 0%; background-color: green; border-radius: 5px;"></div>
   <span id="progressText" style="position: absolute; width: 100%; text-align: center; line-height: 30px; font-weight: bold; color: white;">
     Progress to emptying water body: 0%
   </span>
 </div>
+
+<!-- Hard reset button -->
+<button id="hardResetBtn" style="background-color:red; color:white;" onclick="hardReset()">
+  Hard Reset
+</button>
 
 <script>
   // --- Variables ---
@@ -54,24 +64,17 @@
   let current_trash = total_trash;
   let trash_points = 0;
 
-  // Upgrade 1 (resets per lake)
   let upg1_level = 0;
   let upg1_cost = 15;
 
-  // Upgrade 2 (permanent)
   let upg2_multiplier = 1;
   let upg2_cost = 1;
 
-  // Trash per click
   let trash_per_click = 1;
 
-  // Clean points (global)
   let clean_points = 0;
 
-  // Track lake cleaned state per lake
   let lakeCleaned = Array(lakes.length).fill(false);
-
-  // Track if small lake is cleaned for unlocks
   let smallLakeCleaned = false;
 
   // --- Elements ---
@@ -102,14 +105,13 @@
   ttrash.style.color = "red";
 
   // --- Progress animation variables ---
-  let currentProgressWidth = 0; // current width in %
-  let targetProgressWidth = 0;  // target width in %
+  let currentProgressWidth = 0;
+  let targetProgressWidth = 0;
 
   function animateProgress() {
-    // Smoothly move current width toward target width
     const delta = targetProgressWidth - currentProgressWidth;
     if(Math.abs(delta) > 0.01){
-      currentProgressWidth += delta * 0.2; // adjust speed with 0.2
+      currentProgressWidth += delta * 0.2;
       progressBar.style.width = currentProgressWidth + "%";
       progressText.textContent = `Progress to emptying water body: ${currentProgressWidth.toFixed(1)}%`;
       requestAnimationFrame(animateProgress);
@@ -122,15 +124,9 @@
 
   // --- Helper functions ---
   function formatMass(value){
-    if(value >= 1000000) return (value/1000000).toFixed(2);
-    if(value >= 1000) return (value/1000).toFixed(2);
-    return value.toFixed(2);
-  }
-
-  function getUnit(value){
-    if(value >= 1000000) return " t";
-    if(value >= 1000) return " kg";
-    return " g";
+    if(value >= 1000000) return (value/1000000).toFixed(2) + " t";
+    if(value >= 1000) return (value/1000).toFixed(2) + " kg";
+    return value.toFixed(2) + " g";
   }
 
   function updateTrashPerClick(){
@@ -146,28 +142,17 @@
     up2_cost_el.textContent = upg2_cost;
     cleanPointsText.textContent = clean_points;
 
-    // Update unit spans
-    units.forEach((u,index)=>{
-      if(index===0) u.textContent=getUnit(current_trash);
-      if(index===1) u.textContent=getUnit(total_trash);
-      if(index===2) u.textContent=getUnit(trash_per_click);
-    });
-
-    // Always show CP for this lake
     cleanGainLabel.textContent = `Clean Points gained on emptying: ${lakes[lakeIndex].cp}`;
 
-    // Update buttons
     nextLakeBtn.style.display = (lakeIndex < lakes.length - 1 && lakeCleaned[lakeIndex]) ? "inline" : "none";
     prevLakeBtn.style.display = (lakeIndex > 0) ? "inline" : "none";
 
-    // Upgrade 2 visibility
     if(smallLakeCleaned){
       upgrade2Text.style.display = "block";
       upgrade2Btn.style.display = "inline";
       document.getElementById("upgrade2CostText").style.display="block";
     }
 
-    // Update target progress width
     targetProgressWidth = ((total_trash - current_trash) / total_trash * 100);
     animateProgress();
   }
@@ -209,7 +194,6 @@
 
     if(lakeIndex === 0) smallLakeCleaned = true;
 
-    // Reset per-lake stuff
     trash_points = 0;
     upg1_level = 0;
     upg1_cost = 15;
@@ -251,14 +235,77 @@
     updateUI();
   }
 
+  // --- Auto-save ---
+  function saveProgress() {
+    const saveData = {
+      lakeIndex,
+      total_trash,
+      current_trash,
+      trash_points,
+      upg1_level,
+      upg1_cost,
+      upg2_multiplier,
+      upg2_cost,
+      clean_points,
+      lakeCleaned,
+      smallLakeCleaned
+    };
+    localStorage.setItem('trashGameSave', JSON.stringify(saveData));
+    console.log("Progress saved.");
+  }
+
+  function loadProgress() {
+    const saved = localStorage.getItem('trashGameSave');
+    if(saved) {
+      const data = JSON.parse(saved);
+      lakeIndex = data.lakeIndex;
+      total_trash = data.total_trash;
+      current_trash = data.current_trash;
+      trash_points = data.trash_points;
+      upg1_level = data.upg1_level;
+      upg1_cost = data.upg1_cost;
+      upg2_multiplier = data.upg2_multiplier;
+      upg2_cost = data.upg2_cost;
+      clean_points = data.clean_points;
+      lakeCleaned = data.lakeCleaned;
+      smallLakeCleaned = data.smallLakeCleaned;
+    }
+  }
+
+  setInterval(saveProgress, 30000); // auto-save every 30 sec
+
+  // --- Hard reset ---
+  function hardReset() {
+    const confirmation = prompt("Type 'conform' to reset ALL progress:");
+    if (confirmation === "conform") {
+      localStorage.removeItem('trashGameSave');
+
+      lakeIndex = 0;
+      total_trash = lakes[lakeIndex].trash;
+      current_trash = total_trash;
+      trash_points = 0;
+      upg1_level = 0;
+      upg1_cost = 15;
+      upg2_multiplier = 1;
+      upg2_cost = 1;
+      clean_points = 0;
+      lakeCleaned = Array(lakes.length).fill(false);
+      smallLakeCleaned = false;
+
+      updateTrashPerClick();
+      updateUI();
+
+      alert("All progress has been reset!");
+    } else {
+      alert("Reset cancelled.");
+    }
+  }
+
   // --- Initialize ---
+  loadProgress();
   lakeNameText.textContent=`You found a ${lakes[lakeIndex].name}, full of trash!`;
   updateTrashPerClick();
   updateUI();
 </script>
 </body>
 </html>
-
-
-
-
